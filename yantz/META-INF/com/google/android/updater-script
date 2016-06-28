@@ -1,0 +1,14 @@
+ui_print("");
+ui_print(" ###################### ");
+ui_print(" Redmi 3");
+ui_print(" Swap kernel into boot");
+ui_print(" yantz <wnroheryanto@hotmail.com>");
+ui_print(" ");
+ui_print(" ###################### ");
+ui_print("");
+get_device_compatible("ido") == "OK" || abort("This package is for \"ido\" devices; this is a \"" + getprop("ro.product.device") + "\".");
+package_extract_dir("bin", "/tmp/mkboot");
+set_metadata_recursive(0, 0, 0775, 0755, "/tmp/mkboot");
+set_metadata_recursive("/tmp/mkboot", "uid", 0, "gid", 0, "dmode", 0755, "fmode", 0755);
+package_extract_dir("kernel", "/tmp/kernel");
+run_program("/tmp/mkboot/bootimg");

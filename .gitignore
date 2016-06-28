@@ -63,6 +63,14 @@ include/config
 include/generated
 arch/*/include/generated
 
+#
+# Generated out files
+#
+out/
+yantz/*.zip
+yantz/kernel/dtb
+yantz/kernel/Image.gz
+
 # stgit generated dirs
 patches-*
 
