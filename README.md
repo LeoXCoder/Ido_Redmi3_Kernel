@@ -13,6 +13,7 @@ BUILD KERNEL INFORMATION
 
 3. Flashable zip at ${KERNEL_DIR}/yantz
 
-*4. Reboot phone and use new kernel
-*WIP: Unbootable!!!
+4. Flash via twrp
+
+5. Reboot
 
