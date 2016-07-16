@@ -68,6 +68,8 @@ arch/*/include/generated
 #
 out/
 yantz/*.zip
+yantz/*.ko
+yantz/modules.txt
 yantz/kernel/dtb
 yantz/kernel/Image.gz
 

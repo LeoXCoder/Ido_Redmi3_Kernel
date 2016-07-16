@@ -10,14 +10,11 @@ MAKE_CONFIG_FILE="yantz_defconfig"
 #MAKE_CONFIG_FILE="xiaomieu_defconfig"
 export KBUILD_BUILD_USER="yantz"
 export KBUILD_BUILD_HOST="xda"
-
 export TARGET_BUILD_VARIANT=user
-
 export CROSS_COMPILE=~/aarch64-linux-android-4.9/bin/aarch64-linux-android-
-
 export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
 export USE_CCACHE=1
-
+STRIP=~/aarch64-linux-android-4.9/bin/aarch64-linux-android-strip
 #########################################################################
 # End config
 #########################################################################
@@ -41,17 +38,10 @@ yellow='\033[0;33m'
 red='\033[0;31m'
 nocol='\033[0m'
 
-if [ "$NR_CPUS" -le "2" ]; then
-echo -e "$red Building kernel with 4 CPU threads $nocol";
-else
-echo -e "$red Building kernel with $NR_CPUS CPU threads $nocol";
-fi;
+echo -e "$red Cleaning previous build $nocol";
 
 if [ -e ${FINAL_DIR}/kernel/Image.gz ]; then
 	rm ${FINAL_DIR}/kernel/Image.gz
-fi
-if [ -e ${FINAL_DIR}/*.ko ]; then
-	rm ${FINAL_DIR}/*.ko
 fi
 if [ -e ${FINAL_DIR}/modules.txt ]; then
 	rm ${FINAL_DIR}/modules.txt
@@ -64,7 +54,7 @@ mkdir ${OUT_DIR}
 echo -e "$cyan Make config (${MAKE_CONFIG_FILE}) $nocol";
 make O=${OUT_DIR} ${MAKE_CONFIG_FILE}
 #read -p ""
-echo -e "$cyan Build kernel $nocol";
+echo -e "$cyan Build kernel using ${NR_CPUS} cores $nocol";
 ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-g7c82c5f"
 
 if ! [ -a $KERN_IMG ]; then
@@ -77,7 +67,7 @@ cp ${KERN_IMG}  ${FINAL_DIR}/kernel/Image.gz
 cd ${FINAL_DIR}
 
 echo -e "$cyan Build flash file $nocol";
-zipfile="$flashfilename_($(date +"%d-%m-%Y(%H.%M%p)")).zip"
+zipfile="${flashfilename}_($(date +"%d-%m-%Y(%H.%M%p)")).zip"
 zip -r ${zipfile} kernel bin META-INF -x *kernel/.gitignore*
 
 echo -e "$cyan Copy external modules $nocol";
@@ -89,7 +79,8 @@ while read -r line || [[ -n "$line" ]]; do
   cp "$name" "${FINAL_DIR}"
   let count+=1
 done < "$cpmod"
-echo "$count modules copied"
+bash "${STRIP} --strip-unneeded ${FINAL_DIR}/*.ko"
+echo "$count modules copied and stripped"
 
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
