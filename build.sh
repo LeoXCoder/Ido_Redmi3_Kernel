@@ -55,7 +55,8 @@ echo -e "$cyan Make config (${MAKE_CONFIG_FILE}) $nocol";
 make O=${OUT_DIR} ${MAKE_CONFIG_FILE}
 #read -p ""
 echo -e "$cyan Build kernel using ${NR_CPUS} cores $nocol";
-ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-g7c82c5f"
+#ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-g7c82c5f"
+ccache make O=${OUT_DIR} -j${NR_CPUS}
 
 if ! [ -a $KERN_IMG ]; then
 	echo -e "$red Kernel Compilation failed! Fix the errors! $nocol";
