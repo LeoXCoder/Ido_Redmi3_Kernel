@@ -80,7 +80,7 @@ while read -r line || [[ -n "$line" ]]; do
   cp "$name" "${FINAL_DIR}"
   let count+=1
 done < "$cpmod"
-bash "${STRIP} --strip-unneeded ${FINAL_DIR}/*.ko"
+/home/yantz/aarch64-linux-android-4.9/bin/aarch64-linux-android-strip --strip-unneeded ${FINAL_DIR}/*.ko
 echo "$count modules copied and stripped"
 
 BUILD_END=$(date +"%s")
