@@ -604,12 +604,12 @@ static int ft5x06_ts_suspend(struct device *dev)
 
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
 	if (prevent_sleep) {
-		enable_irq_wake(ft5x06->irq);
-		mutex_lock(&ft5x06->mutex);
-		cancel_delayed_work_sync(&ft5x06->noise_filter_delayed_work);
-		error = ft5x06_write_byte(ft5x06,
-				FT5X0X_ID_G_PMODE, FT5X0X_POWER_MONITOR);
-		mutex_unlock(&ft5x06->mutex);
+		enable_irq_wake(data->client->irq);
+		mutex_lock(&dev->mutex);
+		cancel_delayed_work_sync(&data->noise_filter_delayed_work);
+		err = ft5x0x_write_reg(data->client,
+				FT_REG_PMODE, FT_PMODE_MONITOR);
+		mutex_unlock(&dev->mutex);
 	} else {
 #endif
 
@@ -695,12 +695,12 @@ static int ft5x06_ts_resume(struct device *dev)
 
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
 	if (prevent_sleep) {
-		disable_irq_wake(ft5x06->irq);
-		mutex_lock(&ft5x06->mutex);
-		cancel_delayed_work_sync(&ft5x06->noise_filter_delayed_work);
-		ft5x06_write_byte(ft5x06,
-			FT5X0X_ID_G_PMODE, FT5X0X_POWER_ACTIVE);
-		mutex_unlock(&ft5x06->mutex);
+		disable_irq_wake(data->client->irq);
+		mutex_lock(&dev->mutex);
+		cancel_delayed_work_sync(&data->noise_filter_delayed_work);
+		ft5x0x_write_reg(data->client,
+			FT_REG_PMODE, FT_PMODE_ACTIVE);
+		mutex_unlock(&dev->mutex);
 	} else {
 #endif
 
@@ -2831,7 +2831,7 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 
 	err = request_threaded_irq(client->irq, NULL, ft5x06_ts_interrupt,
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-				IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND, "ft5x06", ft5x06);
+				IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND, client->dev.driver->name, data);
 #else
 							   pdata->irq_gpio_flags | IRQF_ONESHOT,
 							   client->dev.driver->name, data);
