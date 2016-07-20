@@ -108,6 +108,26 @@ MODULE_LICENSE("GPLv2");
 #define S2W_KEY_RIGHT			570
 #define S2W_Y_B1				300
 #define S2W_Y_B2				S2W_Y_LIMIT-300
+#elif defined(CONFIG_ARCH_MSM8916)
+/* Xiaomi Redmi 3 2016 */
+#define S2W_Y_MAX				1350
+#define S2W_X_MAX				720
+#ifdef CONFIG_TOUCHSCREEN_EXP_KEYPAD_SWEEP2WAKE
+#define S2W_Y_LIMIT				1280
+#else
+#define S2W_Y_LIMIT				1180
+#endif
+#define S2W_X_B1				155
+#define S2W_X_B2				355
+#define S2W_X_FINAL				175
+#ifdef CONFIG_TOUCHSCREEN_EXP_KEYPAD_SWEEP2WAKE
+#define EXP_KEYPAD_S2W
+#endif
+#define S2W_KEY_LEFT			160
+#define S2W_KEY_CENTER			360
+#define S2W_KEY_RIGHT			570
+#define S2W_Y_B1				300
+#define S2W_Y_B2				S2W_Y_LIMIT-300
 #elif defined(CONFIG_MACH_PICO)
 /* HTC Pico 2011 */
 #define S2W_Y_MAX				1050

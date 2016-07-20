@@ -78,6 +78,10 @@ MODULE_LICENSE("GPLv2");
 #elif defined(CONFIG_MACH_PICO)
 #define DT2W_X_MAX				1024
 #define DT2W_Y_LIMIT			910
+#elif defined(CONFIG_ARCH_MSM8916)
+#define DT2W_X_MAX				720
+#define DT2W_Y_LIMIT			1280
+
 #else
 /* defaults */
 #define DT2W_X_MAX				1540
