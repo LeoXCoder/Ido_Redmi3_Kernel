@@ -2830,12 +2830,12 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 	data->family_id = pdata->family_id;
 
 	err = request_threaded_irq(client->irq, NULL, ft5x06_ts_interrupt,
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-				IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND, client->dev.driver->name, data);
-#else
+//#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+//				IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND, client->dev.driver->name, data);
+//#else
 							   pdata->irq_gpio_flags | IRQF_ONESHOT,
 							   client->dev.driver->name, data);
-#endif
+//#endif
 	if (err) {
 		dev_err(&client->dev, "request irq failed\n");
 		goto free_reset_gpio;
