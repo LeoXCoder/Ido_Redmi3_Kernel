@@ -46,13 +46,13 @@ fi
 if [ -e ${FINAL_DIR}/modules.txt ]; then
 	rm ${FINAL_DIR}/modules.txt
 fi
-#if [ -d ${OUT_DIR} ]; then
-#	rm -rf ${OUT_DIR}
-#fi
-#mkdir ${OUT_DIR}
+if [ -d ${OUT_DIR} ]; then
+	rm -rf ${OUT_DIR}
+fi
+mkdir ${OUT_DIR}
 
 echo -e "$cyan Make config (${MAKE_CONFIG_FILE}) $nocol";
-#make O=${OUT_DIR} ${MAKE_CONFIG_FILE}
+make O=${OUT_DIR} ${MAKE_CONFIG_FILE}
 #read -p ""
 echo -e "$cyan Build kernel using ${NR_CPUS} cores $nocol";
 #ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-g7c82c5f"
