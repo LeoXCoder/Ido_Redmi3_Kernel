@@ -5,9 +5,7 @@
 # Configure these
 #########################################################################
 
-#MAKE_CONFIG_FILE="wt88509_64-perf_defconfig"
 MAKE_CONFIG_FILE="yantz_defconfig"
-#MAKE_CONFIG_FILE="xiaomieu_defconfig"
 export KBUILD_BUILD_USER="yantz"
 export KBUILD_BUILD_HOST="xda"
 export TARGET_BUILD_VARIANT=user
@@ -30,7 +28,7 @@ NR_CPUS=$(grep -c ^processor /proc/cpuinfo)
 BUILD_START=$(date +"%s")
 modord="${KERNEL_DIR}/${OUT_DIR}/modules.order"
 cpmod="${FINAL_DIR}/modules.txt"
-flashfilename="yantz_Redmi3_Alpha"
+flashfilename="MYKernel_Redmi3_Alpha"
 
 blue='\033[0;34m'
 cyan='\033[0;36m'
@@ -46,6 +44,7 @@ fi
 if [ -e ${FINAL_DIR}/modules.txt ]; then
 	rm ${FINAL_DIR}/modules.txt
 fi
+rm ${FINAL_DIR}/modules/*.ko
 if [ -d ${OUT_DIR} ]; then
 	rm -rf ${OUT_DIR}
 fi
@@ -53,10 +52,10 @@ mkdir ${OUT_DIR}
 
 echo -e "$cyan Make config (${MAKE_CONFIG_FILE}) $nocol";
 make O=${OUT_DIR} ${MAKE_CONFIG_FILE}
-#read -p ""
+
 echo -e "$cyan Build kernel using ${NR_CPUS} cores $nocol";
-#ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-g7c82c5f"
-ccache make O=${OUT_DIR} -j${NR_CPUS}
+ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-$(date +"%Y%m%d_%H%M")"
+#ccache make O=${OUT_DIR} -j${NR_CPUS}
 
 if ! [ -a $KERN_IMG ]; then
 	echo -e "$red Kernel Compilation failed! Fix the errors! $nocol";
@@ -66,10 +65,6 @@ fi
 echo -e "$cyan Copy kernel $nocol";
 cp ${KERN_IMG}  ${FINAL_DIR}/kernel/Image.gz
 cd ${FINAL_DIR}
-
-echo -e "$cyan Build flash file $nocol";
-zipfile="${flashfilename}_($(date +"%d-%m-%Y(%H.%M%p)")).zip"
-zip -r ${zipfile} kernel bin META-INF -x *kernel/.gitignore*
 
 echo -e "$cyan Copy external modules $nocol";
 cp $modord $cpmod
@@ -81,7 +76,13 @@ while read -r line || [[ -n "$line" ]]; do
   let count+=1
 done < "$cpmod"
 ${STRIP} --strip-unneeded ${FINAL_DIR}/*.ko
+cp ${FINAL_DIR}/wlan.ko ${FINAL_DIR}/modules/pronto_wlan.ko
+cp ${FINAL_DIR}/core_ctl.ko ${FINAL_DIR}/modules
 echo "$count modules copied and stripped"
+
+echo -e "$cyan Build flash file $nocol";
+zipfile="${flashfilename}_$(date +"%Y%m%d_%H%M").zip"
+zip -r ${zipfile} kernel bin modules META-INF -x *kernel/.gitignore*
 
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))

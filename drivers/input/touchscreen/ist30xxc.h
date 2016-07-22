@@ -391,6 +391,7 @@ struct ist30xx_platform_data {
 	u32 irq_gpio_flags;
 	u32 reset_gpio_flags;
 	const char *vdd_name;
+	unsigned long			irqflags;
 };
 
 struct CH_NUM {

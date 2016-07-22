@@ -132,7 +132,6 @@
 
 #define FT5x0x_REG_FW_VER   0xA6
 
-
 /* Firmware file is not supporting minor and sub minor so use 0 */
 #define FT_FW_FILE_MAJ_VER(x)   ((x)->data[(x)->size - 2])
 #define FT_FW_FILE_MIN_VER(x)   0
@@ -269,6 +268,7 @@ struct ft5x06_ts_data {
 	bool loading_fw;
 	u8 family_id;
 	struct dentry *dir;
+	struct delayed_work noise_filter_delayed_work;
 	u16 addr;
 	bool suspended;
 	char *ts_info;

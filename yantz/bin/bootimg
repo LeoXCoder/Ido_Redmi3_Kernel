@@ -1,14 +1,18 @@
 #!/sbin/sh
 # puppet13th@xda
-# yantz <wnroheryanto@hotmail.com>
 #dump current installed kernel
+mount -t ext4 -o rw /dev/block/bootdevice/by-name/system /system
+cp /system/lib/modules/core_ctl.ko /system/lib/modules/core_ctl.ko.bak
+cp /tmp/modules/core_ctl.ko /system/lib/modules
+cp /system/lib/modules/pronto/pronto_wlan.ko /system/lib/modules/pronto/pronto_wlan.ko.bak
+cp /tmp/modules/pronto_wlan.ko /system/lib/modules/pronto
 workdir=/tmp/mkboot
 dd if=/dev/block/bootdevice/by-name/boot of=$workdir/boot.img
 #unpack kernel image
 /tmp/mkboot/wrapper $workdir/boot.img $workdir/boot
+#make some modification on ramdisk
 cp /tmp/kernel/Image.gz $workdir/boot/zImage
-cp /tmp/kernel/dtb $workdir/boot/dtb
 #repack kernel image
-/tmp/mkboot/wrapper $workdir/boot boot-new.img
+/tmp/mkboot/wrapper /tmp/mkboot/boot /tmp/mkboot/boot-new.img
 #flash new kernel image to device
-dd if=$workdir/boot/boot-new.img of=/dev/block/bootdevice/by-name/boot
+dd if=/tmp/mkboot/boot-new.img of=/dev/block/bootdevice/by-name/boot

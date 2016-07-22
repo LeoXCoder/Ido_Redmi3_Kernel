@@ -53,6 +53,15 @@
 #define FT_SUSPEND_LEVEL 1
 #endif
 
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#include <linux/input/sweep2wake.h>
+#endif
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+#include <linux/input/doubletap2wake.h>
+#endif
+#endif
+
 #if CTP_PROC_INTERFACE
 #include "ft5x06_test_lib.h"
 #endif
@@ -581,6 +590,29 @@ static int ft5x06_ts_suspend(struct device *dev)
 	char txbuf[2], i;
 	int err;
 
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE) || defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
+	bool prevent_sleep = false;
+#endif
+#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE)
+	prevent_sleep = (s2w_switch > 0) && (s2w_s2sonly == 0);
+#endif
+#if defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
+	prevent_sleep = prevent_sleep || (dt2w_switch > 0);
+#endif
+#endif
+
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	if (prevent_sleep) {
+		enable_irq_wake(data->client->irq);
+		mutex_lock(&dev->mutex);
+		cancel_delayed_work_sync(&data->noise_filter_delayed_work);
+		err = ft5x0x_write_reg(data->client,
+				FT_REG_PMODE, FT_PMODE_MONITOR);
+		mutex_unlock(&dev->mutex);
+	} else {
+#endif
+
 	if (data->loading_fw) {
 		dev_info(dev, "Firmware loading in process...\n");
 		return 0;
@@ -635,6 +667,11 @@ pwr_off_fail:
 		gpio_set_value_cansleep(data->pdata->reset_gpio, 1);
 	}
 	enable_irq(data->client->irq);
+
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	} // if (prevent_sleep)
+#endif
+
 	return err;
 
 }
@@ -643,6 +680,29 @@ static int ft5x06_ts_resume(struct device *dev)
 {
 	struct ft5x06_ts_data *data = dev_get_drvdata(dev);
 	int err;
+
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE) || defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
+	bool prevent_sleep = false;
+#endif
+#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE)
+	prevent_sleep = (s2w_switch > 0) && (s2w_s2sonly == 0);
+#endif
+#if defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
+	prevent_sleep = prevent_sleep || (dt2w_switch > 0);
+#endif
+#endif
+
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	if (prevent_sleep) {
+		disable_irq_wake(data->client->irq);
+		mutex_lock(&dev->mutex);
+		cancel_delayed_work_sync(&data->noise_filter_delayed_work);
+		ft5x0x_write_reg(data->client,
+			FT_REG_PMODE, FT_PMODE_ACTIVE);
+		mutex_unlock(&dev->mutex);
+	} else {
+#endif
 
 	if (!data->suspended) {
 		dev_dbg(dev, "Already in awake state\n");
@@ -694,6 +754,10 @@ static int ft5x06_ts_resume(struct device *dev)
 
 	data->suspended = false;
 
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	} // if (prevent_sleep)
+#endif
+
 	return 0;
 }
 
@@ -736,15 +800,22 @@ static int fb_notifier_callback(struct notifier_block *self,
 	if (evdata && evdata->data && event == FB_EVENT_BLANK &&
 		ft5x06_data && ft5x06_data->client) {
 		blank = evdata->data;
-		if (*blank == FB_BLANK_UNBLANK)
-		   schedule_work(&ft5x06_data->fb_notify_work);
-		 else if (*blank == FB_BLANK_POWERDOWN) {
-			flush_work(&ft5x06_data->fb_notify_work);
-			ft5x06_ts_suspend(&ft5x06_data->client->dev);
+		switch (*blank) {
+			case FB_BLANK_UNBLANK:
+				pr_info("ft5x06 resume!\n");
+				ft5x06_ts_resume(&ft5x06_data->client->dev);
+				break;
+			case FB_BLANK_POWERDOWN:
+			case FB_BLANK_HSYNC_SUSPEND:
+			case FB_BLANK_VSYNC_SUSPEND:
+			case FB_BLANK_NORMAL:
+				pr_info("ft5x06 suspend!\n");
+				ft5x06_ts_suspend(&ft5x06_data->client->dev);
+				break;
 		}
 	}
 
-	return 0;
+	return NOTIFY_OK;
 }
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 static void ft5x06_ts_early_suspend(struct early_suspend *handler)
@@ -2758,10 +2829,13 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 
 	data->family_id = pdata->family_id;
 
-	err = request_threaded_irq(client->irq, NULL,
-							   ft5x06_ts_interrupt,
+	err = request_threaded_irq(client->irq, NULL, ft5x06_ts_interrupt,
+//#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+//				IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND, client->dev.driver->name, data);
+//#else
 							   pdata->irq_gpio_flags | IRQF_ONESHOT,
 							   client->dev.driver->name, data);
+//#endif
 	if (err) {
 		dev_err(&client->dev, "request irq failed\n");
 		goto free_reset_gpio;
