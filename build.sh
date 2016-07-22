@@ -28,7 +28,7 @@ NR_CPUS=$(grep -c ^processor /proc/cpuinfo)
 BUILD_START=$(date +"%s")
 modord="${KERNEL_DIR}/${OUT_DIR}/modules.order"
 cpmod="${FINAL_DIR}/modules.txt"
-flashfilename="MY_Kernel_Redmi3_Alpha"
+flashfilename="MYKernel_Redmi3_Alpha"
 
 blue='\033[0;34m'
 cyan='\033[0;36m'
@@ -51,10 +51,10 @@ mkdir ${OUT_DIR}
 
 echo -e "$cyan Make config (${MAKE_CONFIG_FILE}) $nocol";
 make O=${OUT_DIR} ${MAKE_CONFIG_FILE}
-#read -p ""
+
 echo -e "$cyan Build kernel using ${NR_CPUS} cores $nocol";
-#ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-g7c82c5f"
-ccache make O=${OUT_DIR} -j${NR_CPUS}
+ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-$(date +"%Y%m%d_%H%M")"
+#ccache make O=${OUT_DIR} -j${NR_CPUS}
 
 if ! [ -a $KERN_IMG ]; then
 	echo -e "$red Kernel Compilation failed! Fix the errors! $nocol";
