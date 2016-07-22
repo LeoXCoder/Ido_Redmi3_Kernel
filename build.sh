@@ -5,9 +5,7 @@
 # Configure these
 #########################################################################
 
-#MAKE_CONFIG_FILE="wt88509_64-perf_defconfig"
 MAKE_CONFIG_FILE="yantz_defconfig"
-#MAKE_CONFIG_FILE="xiaomieu_defconfig"
 export KBUILD_BUILD_USER="yantz"
 export KBUILD_BUILD_HOST="xda"
 export TARGET_BUILD_VARIANT=user
@@ -30,7 +28,7 @@ NR_CPUS=$(grep -c ^processor /proc/cpuinfo)
 BUILD_START=$(date +"%s")
 modord="${KERNEL_DIR}/${OUT_DIR}/modules.order"
 cpmod="${FINAL_DIR}/modules.txt"
-flashfilename="yantz_Redmi3_Alpha"
+flashfilename="MY_Kernel_Redmi3_Alpha"
 
 blue='\033[0;34m'
 cyan='\033[0;36m'
@@ -68,7 +66,7 @@ cp ${KERN_IMG}  ${FINAL_DIR}/kernel/Image.gz
 cd ${FINAL_DIR}
 
 echo -e "$cyan Build flash file $nocol";
-zipfile="${flashfilename}_($(date +"%d-%m-%Y(%H.%M%p)")).zip"
+zipfile="${flashfilename}_$(date +"%Y%m%d_%H%M").zip"
 zip -r ${zipfile} kernel bin META-INF -x *kernel/.gitignore*
 
 echo -e "$cyan Copy external modules $nocol";
@@ -80,7 +78,7 @@ while read -r line || [[ -n "$line" ]]; do
   cp "$name" "${FINAL_DIR}"
   let count+=1
 done < "$cpmod"
-/home/yantz/aarch64-linux-android-4.9/bin/aarch64-linux-android-strip --strip-unneeded ${FINAL_DIR}/*.ko
+${STRIP} --strip-unneeded ${FINAL_DIR}/*.ko
 echo "$count modules copied and stripped"
 
 BUILD_END=$(date +"%s")
