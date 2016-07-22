@@ -44,6 +44,7 @@ fi
 if [ -e ${FINAL_DIR}/modules.txt ]; then
 	rm ${FINAL_DIR}/modules.txt
 fi
+rm ${FINAL_DIR}/modules/*.ko
 if [ -d ${OUT_DIR} ]; then
 	rm -rf ${OUT_DIR}
 fi
