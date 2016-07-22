@@ -65,10 +65,6 @@ echo -e "$cyan Copy kernel $nocol";
 cp ${KERN_IMG}  ${FINAL_DIR}/kernel/Image.gz
 cd ${FINAL_DIR}
 
-echo -e "$cyan Build flash file $nocol";
-zipfile="${flashfilename}_$(date +"%Y%m%d_%H%M").zip"
-zip -r ${zipfile} kernel bin META-INF -x *kernel/.gitignore*
-
 echo -e "$cyan Copy external modules $nocol";
 cp $modord $cpmod
 sed -i "s/^kernel//g" $cpmod
@@ -79,7 +75,13 @@ while read -r line || [[ -n "$line" ]]; do
   let count+=1
 done < "$cpmod"
 ${STRIP} --strip-unneeded ${FINAL_DIR}/*.ko
+cp ${FINAL_DIR}/wlan.ko ${FINAL_DIR}/modules/pronto_wlan.ko
+cp ${FINAL_DIR}/core_ctl.ko ${FINAL_DIR}/modules
 echo "$count modules copied and stripped"
+
+echo -e "$cyan Build flash file $nocol";
+zipfile="${flashfilename}_$(date +"%Y%m%d_%H%M").zip"
+zip -r ${zipfile} kernel bin modules META-INF -x *kernel/.gitignore*
 
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
