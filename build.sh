@@ -28,7 +28,7 @@ NR_CPUS=$(grep -c ^processor /proc/cpuinfo)
 BUILD_START=$(date +"%s")
 modord="${KERNEL_DIR}/${OUT_DIR}/modules.order"
 cpmod="${FINAL_DIR}/modules.txt"
-flashfilename="MYKernel_Redmi3_Alpha"
+flashfilename="MYKernel_Redmi3_Beta"
 
 blue='\033[0;34m'
 cyan='\033[0;36m'
