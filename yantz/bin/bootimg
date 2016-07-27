@@ -2,10 +2,7 @@
 # puppet13th@xda
 #dump current installed kernel
 mount -t ext4 -o rw /dev/block/bootdevice/by-name/system /system
-cp /system/lib/modules/core_ctl.ko /system/lib/modules/core_ctl.ko.bak
-cp /tmp/modules/core_ctl.ko /system/lib/modules
-cp /system/lib/modules/pronto/pronto_wlan.ko /system/lib/modules/pronto/pronto_wlan.ko.bak
-cp /tmp/modules/pronto_wlan.ko /system/lib/modules/pronto
+cp /tmp/modules/*.ko /system/lib/modules
 workdir=/tmp/mkboot
 dd if=/dev/block/bootdevice/by-name/boot of=$workdir/boot.img
 #unpack kernel image
