@@ -55,7 +55,6 @@ make O=${OUT_DIR} ${MAKE_CONFIG_FILE}
 
 echo -e "$cyan Build kernel using ${NR_CPUS} cores $nocol";
 ccache make O=${OUT_DIR} -j${NR_CPUS} LOCALVERSION="-$(date +"%Y%m%d_%H%M")"
-#ccache make O=${OUT_DIR} -j${NR_CPUS}
 
 if ! [ -a $KERN_IMG ]; then
 	echo -e "$red Kernel Compilation failed! Fix the errors! $nocol";
@@ -72,12 +71,12 @@ sed -i "s/^kernel//g" $cpmod
 count=0
 while read -r line || [[ -n "$line" ]]; do
   name="${KERNEL_DIR}/${OUT_DIR}$line"
-  cp "$name" "${FINAL_DIR}"
+  cp "$name" "${FINAL_DIR}/modules"
   let count+=1
 done < "$cpmod"
-${STRIP} --strip-unneeded ${FINAL_DIR}/*.ko
-cp ${FINAL_DIR}/wlan.ko ${FINAL_DIR}/modules/pronto_wlan.ko
-cp ${FINAL_DIR}/core_ctl.ko ${FINAL_DIR}/modules
+${STRIP} --strip-unneeded ${FINAL_DIR}/modules/*.ko
+#cp ${FINAL_DIR}/wlan.ko ${FINAL_DIR}/modules/pronto_wlan.ko
+#cp ${FINAL_DIR}/*.ko ${FINAL_DIR}/modules
 echo "$count modules copied and stripped"
 
 echo -e "$cyan Build flash file $nocol";
