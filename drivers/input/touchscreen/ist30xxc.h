@@ -30,10 +30,10 @@
 #define A9HD_PID					0x1002
 #define A11FHD_PID				  0x1003
 #define XIAOMI_GET_PID(n)		   ((n & ~(XIAOMI_INFO_MASK)) >> 8)
-#define FHD_KEY_Y				   2009
-#define FHD_MENU_KEY_X			  180
-#define FHD_HOME_KEY_X			  540
-#define FHD_BACK_KEY_X			  900
+#define FHD_KEY_Y				   1340//2009
+#define FHD_MENU_KEY_X			  120//180
+#define FHD_HOME_KEY_X			  360//540
+#define FHD_BACK_KEY_X			  600//900
 #define IMAGIS_DD_VERSION			("2.3.0.0")
 
 #define IMAGIS_IST3026C				(1) /* 3026C */
