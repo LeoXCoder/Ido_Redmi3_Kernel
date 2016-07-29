@@ -1844,11 +1844,11 @@ static int ist30xx_probe(struct i2c_client *client,
 #endif
 
 	ret = request_threaded_irq(client->irq, NULL, ist30xx_irq_thread,
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-				   pdata->irqflags | IRQF_NO_SUSPEND, "ist30xx_ts", data);
-#else
+//#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+//				   pdata->irqflags | IRQF_NO_SUSPEND, "ist30xx_ts", data);
+//#else
 			IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "ist30xx_ts", data);
-#endif
+//#endif
 	if (unlikely(ret))
 		goto err_init_drv;
 
