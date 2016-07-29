@@ -41,7 +41,6 @@
 
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
 #include <linux/input/wake_helpers.h>
-int var_is_earpiece_on = 0;
 int var_is_headset_in_use = 0;
 #endif
 
@@ -4609,9 +4608,6 @@ static int tapan_codec_enable_ear_pa(struct snd_soc_dapm_widget *w,
 						 WCD9XXX_CLSH_REQ_ENABLE,
 						 WCD9XXX_CLSH_EVENT_POST_PA);
 
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-		var_is_earpiece_on = 1;
-#endif
 
 		usleep_range(5000, 5010);
 		break;
@@ -4623,15 +4619,9 @@ static int tapan_codec_enable_ear_pa(struct snd_soc_dapm_widget *w,
 						 WCD9XXX_CLSH_REQ_DISABLE,
 						 WCD9XXX_CLSH_EVENT_POST_PA);
 
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-		var_is_earpiece_on = 0;
-#endif
 
 		usleep_range(5000, 5010);
 	}
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	pr_info("%s: set wake_helper var_is_earpiece_on: %d\n", __func__, var_is_earpiece_on);
-#endif
 
 	return 0;
 }
