@@ -44,7 +44,8 @@ fi
 if [ -e ${FINAL_DIR}/modules.txt ]; then
 	rm ${FINAL_DIR}/modules.txt
 fi
-rm ${FINAL_DIR}/modules/*.ko
+rm -rf ${FINAL_DIR}/modules/*
+mkdir ${FINAL_DIR}/modules/pronto
 if [ -d ${OUT_DIR} ]; then
 	rm -rf ${OUT_DIR}
 fi
@@ -75,8 +76,8 @@ while read -r line || [[ -n "$line" ]]; do
   let count+=1
 done < "$cpmod"
 ${STRIP} --strip-unneeded ${FINAL_DIR}/modules/*.ko
-#cp ${FINAL_DIR}/wlan.ko ${FINAL_DIR}/modules/pronto_wlan.ko
-#cp ${FINAL_DIR}/*.ko ${FINAL_DIR}/modules
+cp ${FINAL_DIR}/modules/wlan.ko ${FINAL_DIR}/modules/pronto/pronto_wlan.ko
+rm ${FINAL_DIR}/modules/wlan.ko
 echo "$count modules copied and stripped"
 
 echo -e "$cyan Build flash file $nocol";
