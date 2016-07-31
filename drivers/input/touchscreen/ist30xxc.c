@@ -72,15 +72,6 @@
 #include "ist30xxc_cmcs.h"
 #endif
 
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
-#include <linux/input/sweep2wake.h>
-#endif
-#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
-#include <linux/input/doubletap2wake.h>
-#endif
-#endif
-
 #if  WT_ADD_CTP_INFO
 #include <linux/hardware_info.h>
 static char tp_string_version[40];
@@ -185,53 +176,16 @@ int ist30xx_intr_wait(struct ist30xx_data *data, long ms)
 
 void ist30xx_disable_irq(struct ist30xx_data *data)
 {
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE) || defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
-	bool prevent_sleep = false;
-#endif
-#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE)
-	prevent_sleep = (s2w_switch > 0) && (s2w_s2sonly == 0);
-#endif
-#if defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
-	prevent_sleep = prevent_sleep || (dt2w_switch > 0);
-#endif
-#endif
-
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	if (prevent_sleep) {
-		enable_irq_wake(data->client->irq);
-	} else {
-#endif
 	if (likely(data->irq_enabled)) {
 		ist30xx_tracking(TRACK_INTR_DISABLE);
 		disable_irq(data->client->irq);
 		data->irq_enabled = 0;
 		data->status.event_mode = false;
 	}
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	} //prevent_sleep
-#endif
 }
 
 void ist30xx_enable_irq(struct ist30xx_data *data)
 {
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE) || defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
-	bool prevent_sleep = false;
-#endif
-#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE)
-	prevent_sleep = (s2w_switch > 0) && (s2w_s2sonly == 0);
-#endif
-#if defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
-	prevent_sleep = prevent_sleep || (dt2w_switch > 0);
-#endif
-#endif
-
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	if (prevent_sleep) {
-		disable_irq_wake(data->client->irq);
-	} else {
-#endif
 	if (likely(!data->irq_enabled)) {
 		ist30xx_tracking(TRACK_INTR_ENABLE);
 		enable_irq(data->client->irq);
@@ -239,9 +193,6 @@ void ist30xx_enable_irq(struct ist30xx_data *data)
 		data->irq_enabled = 1;
 		data->status.event_mode = true;
 	}
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	}
-#endif
 }
 
 void ist30xx_scheduled_reset(struct ist30xx_data *data)
@@ -1086,24 +1037,6 @@ static int ist30xx_suspend(struct device *dev)
 {
 	struct ist30xx_data *data = dev_get_drvdata(dev);
 
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE) || defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
-	bool prevent_sleep = false;
-#endif
-#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE)
-	prevent_sleep = (s2w_switch > 0) && (s2w_s2sonly == 0);
-#endif
-#if defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
-	prevent_sleep = prevent_sleep || (dt2w_switch > 0);
-#endif
-#endif
-
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	if (prevent_sleep) {
-		enable_irq_wake(data->client->irq);
-	} else {
-#endif
-
 	del_timer(&event_timer);
 	cancel_delayed_work_sync(&data->work_noise_protect);
 	cancel_delayed_work_sync(&data->work_reset_check);
@@ -1120,33 +1053,12 @@ static int ist30xx_suspend(struct device *dev)
 	}
 #endif
 	mutex_unlock(&ist30xx_mutex);
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	} //prevent_sleep
-#endif
 	return 0;
 }
 
 static int ist30xx_resume(struct device *dev)
 {
 	 struct ist30xx_data *data = dev_get_drvdata(dev);
-
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE) || defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
-	bool prevent_sleep = false;
-#endif
-#if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE)
-	prevent_sleep = (s2w_switch > 0) && (s2w_s2sonly == 0);
-#endif
-#if defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
-	prevent_sleep = prevent_sleep || (dt2w_switch > 0);
-#endif
-#endif
-
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	if (prevent_sleep) {
-		disable_irq_wake(data->client->irq);
-	} else {
-#endif
 
 	data->noise_mode |= (1 << NOISE_MODE_POWER);
 
@@ -1172,9 +1084,6 @@ static int ist30xx_resume(struct device *dev)
 	ist30xx_start(data);
 	ist30xx_enable_irq(data);
 	mutex_unlock(&ist30xx_mutex);
-#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-	} //prevent_sleep
-#endif
 	return 0;
 }
 
@@ -1844,11 +1753,8 @@ static int ist30xx_probe(struct i2c_client *client,
 #endif
 
 	ret = request_threaded_irq(client->irq, NULL, ist30xx_irq_thread,
-//#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
-//				   pdata->irqflags | IRQF_NO_SUSPEND, "ist30xx_ts", data);
-//#else
 			IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "ist30xx_ts", data);
-//#endif
+
 	if (unlikely(ret))
 		goto err_init_drv;
 
