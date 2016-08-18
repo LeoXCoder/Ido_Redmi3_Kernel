@@ -470,22 +470,22 @@ static int AKECS_GetData_Poll(
 
 	return 0;
 }
-static long AKECS_GetData_Poll_self(struct akm_compass_data *akm, uint8_t *rbuf, int size)
+/*static long AKECS_GetData_Poll_self(struct akm_compass_data *akm, uint8_t *rbuf, int size)
 {
 	uint8_t buffer[AKM_SENSOR_DATA_SIZE];
-	int err;
+	int err;*/
 
 	/* Read status */
-	buffer[0] = AKM_REG_STATUS;
+/*	buffer[0] = AKM_REG_STATUS;
 	err = akm_i2c_rxdata(akm->i2c, buffer, 1);
 	if (err < 0) {
 		dev_err(&akm->i2c->dev, "%s failed.", __func__);
 
 		return err;
-	}
+	}*/
 
 	/* Read rest data */
-	buffer[1] = AKM_REG_STATUS + 1;
+/*	buffer[1] = AKM_REG_STATUS + 1;
 	err = akm_i2c_rxdata(akm->i2c, &(buffer[1]), AKM_SENSOR_DATA_SIZE-1);
 	if (err < 0) {
 		dev_err(&akm->i2c->dev, "%s failed.x", __func__);
@@ -499,7 +499,7 @@ static long AKECS_GetData_Poll_self(struct akm_compass_data *akm, uint8_t *rbuf,
 
 
 	return 0;
-}
+}*/
 static int AKECS_GetOpenStatus(
 	struct akm_compass_data *akm)
 {
