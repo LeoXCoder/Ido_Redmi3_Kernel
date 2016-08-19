@@ -44,7 +44,8 @@ fi
 if [ -e ${FINAL_DIR}/modules.txt ]; then
 	rm ${FINAL_DIR}/modules.txt
 fi
-rm -rf ${FINAL_DIR}/modules/*
+rm -rf ${FINAL_DIR}/modules
+mkdir ${FINAL_DIR}/modules
 mkdir ${FINAL_DIR}/modules/pronto
 if [ -d ${OUT_DIR} ]; then
 	rm -rf ${OUT_DIR}
