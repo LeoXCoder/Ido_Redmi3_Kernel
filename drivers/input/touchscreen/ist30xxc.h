@@ -475,6 +475,9 @@ struct ist30xx_data {
 	bool suspend;
 	bool gesture;
 #endif
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	bool prevent_sleep;
+#endif
 	int scan_count;
 	int scan_retry;
 	int max_scan_retry;

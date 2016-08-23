@@ -46,6 +46,9 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+#include <linux/input/prevent_sleep.h>
+#endif
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -1036,13 +1039,32 @@ irq_ic_err:
 static int ist30xx_suspend(struct device *dev)
 {
 	struct ist30xx_data *data = dev_get_drvdata(dev);
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	bool prevent_sleep = false;
+	bool dit_suspend = false;
+#endif
 
 	del_timer(&event_timer);
 	cancel_delayed_work_sync(&data->work_noise_protect);
 	cancel_delayed_work_sync(&data->work_reset_check);
 	cancel_delayed_work_sync(&data->work_debug_algorithm);
 	mutex_lock(&ist30xx_mutex);
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	ts_get_prevent_sleep(prevent_sleep);
+	DT2W_PRINFO("%s: Prevent Sleep is computed as '%s'\n",
+			__func__, (prevent_sleep) ? "yes" : "no");
+	if (!prevent_sleep) {
+		DT2W_PRINFO("%s: IRQ now disable_irq()\n", __func__);
+		disable_irq(data->client->irq);
+		dit_suspend = false;
+	} else {
+		DT2W_PRINFO("%s: IRQ now enable_irq_wake()\n", __func__);
+		enable_irq_wake(data->client->irq);
+		dit_suspend = true;
+	}
+#else
 	ist30xx_disable_irq(data);
+#endif /* CONFIG_TOUCHSCREEN_PREVENT_SLEEP */
 	ist30xx_internal_suspend(data);
 	clear_input_data(data);
 #if IST30XX_GESTURE
@@ -1053,12 +1075,56 @@ static int ist30xx_suspend(struct device *dev)
 	}
 #endif
 	mutex_unlock(&ist30xx_mutex);
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	if (prevent_sleep) {
+		/* disable the key panel touches */
+		__clear_bit(EV_KEY, data->input_dev->evbit);
+		input_sync(data->input_dev);
+	}
+	data->prevent_sleep = prevent_sleep;
+#endif
 	return 0;
 }
+
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+static int dt2w_toggle_rebalance_irq(struct device *dev)
+{
+	struct ist30xx_data *data = dev_get_drvdata(dev);
+
+	/* 
+	 * Prema Chand Alugu (premaca@gmail.com)
+	 *
+	 * This function must be called only when we know that prevent_sleep state
+	 * has been changed while the screen off.
+	 */
+	if (data->prevent_sleep) {
+		// we have been with wake irqs so far [enable_irq_wake()]
+		disable_irq_wake(data->client->irq);
+		disable_irq(data->client->irq);
+		DT2W_PRINFO("%s: IRQ now disable_irq_wake()\n", __func__);
+		DT2W_PRINFO("%s: IRQ now disable_irq()\n", __func__);
+		DT2W_PRINFO("%s: Rebalanced IRQ while dt2w OFF "
+				"during screen-off\n", __func__);
+	} else {
+		// we have been with irqs so far [disable_irq()]
+		enable_irq(data->client->irq);
+		enable_irq_wake(data->client->irq);
+		DT2W_PRINFO("%s: IRQ now enable_irq()\n", __func__);
+		DT2W_PRINFO("%s: IRQ now enable_irq_wake()\n", __func__);
+		DT2W_PRINFO("%s: Rebalanced IRQ while dt2w ON "
+				"during screen-off\n", __func__);
+	}
+
+	return 0;
+}
+#endif
 
 static int ist30xx_resume(struct device *dev)
 {
 	 struct ist30xx_data *data = dev_get_drvdata(dev);
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	bool prevent_sleep = false;
+#endif
 
 	data->noise_mode |= (1 << NOISE_MODE_POWER);
 
@@ -1082,8 +1148,41 @@ static int ist30xx_resume(struct device *dev)
 		pre_charger_status = is_charger_plug;
 	#endif
 	ist30xx_start(data);
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	ts_get_prevent_sleep(prevent_sleep);
+	if (prevent_sleep != data->prevent_sleep) {
+		/* 
+		 * Prema Chand Alugu (premaca@gmail.com)
+		 *
+		 * simply the rebalance requirement; the prevent_sleep state is
+		 * stored in the dev structure, if there is any change while
+		 * the screen was off, we definitely need to rebalance
+		 * the state could be changed by the following known events
+		 * 1. toggled has been modified while screen was off
+		 * 2. in_phone_call state changed while screen was off
+		 */
+	    dt2w_toggle_rebalance_irq(dev);
+	}
+	DT2W_PRINFO("%s: Prevent Sleep is computed as '%s'\n",
+			__func__, (prevent_sleep) ? "yes" : "no");
+	/* enable the key panel touches back again */
+	__set_bit(EV_KEY, data->input_dev->evbit);
+	input_sync(data->input_dev);
+
+	if (prevent_sleep) {
+		DT2W_PRINFO("%s: IRQ now disable_irq_wake()\n", __func__);
+		disable_irq_wake(data->client->irq);
+	} else {
+		DT2W_PRINFO("%s: IRQ now enable_irq()\n", __func__);
+		enable_irq(data->client->irq);
+	}
+#else
 	ist30xx_enable_irq(data);
+#endif /* CONFIG_TOUCHSCREEN_PREVENT_SLEEP */
 	mutex_unlock(&ist30xx_mutex);
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	data->prevent_sleep = prevent_sleep;
+#endif
 	return 0;
 }
 
@@ -1753,8 +1852,12 @@ static int ist30xx_probe(struct i2c_client *client,
 #endif
 
 	ret = request_threaded_irq(client->irq, NULL, ist30xx_irq_thread,
-			IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "ist30xx_ts", data);
-
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+				pdata->irq_gpio_flags | IRQF_ONESHOT | IRQF_NO_SUSPEND,
+#else
+				IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+#endif
+				"ist30xx_ts", data);
 	if (unlikely(ret))
 		goto err_init_drv;
 

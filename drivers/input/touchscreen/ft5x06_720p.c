@@ -36,7 +36,6 @@
 
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
 #include <linux/input/prevent_sleep.h>
-bool dit_suspend = false;
 #endif
 
 #if  WT_ADD_CTP_INFO
@@ -587,6 +586,7 @@ static int ft5x06_ts_suspend(struct device *dev)
 	int err;
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
 	bool prevent_sleep = false;
+	bool dit_suspend = false;
 #endif
 
 	if (data->loading_fw) {
@@ -2409,7 +2409,6 @@ static int hardwareinfo_set(struct ft5x06_ts_data *data, u8 value_name, u8 color
 	char vendor_for_id[HARDWARE_MAX_ITEM_LONGTH];
 	char ic_name[HARDWARE_MAX_ITEM_LONGTH];
 	char ic_color[HARDWARE_MAX_ITEM_LONGTH];
-	int err;
 
 	if (data->fw_vendor_id == VENDOR_BIEL_1080P)
 		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "BIEL_FHD");
